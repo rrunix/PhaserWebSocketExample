@@ -81,15 +81,9 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
      */
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
-        synchronized (waitingPlayers) {
-            // Sequential access/write for waitingPlayers
-            waitingPlayers.add(session);
-        }
-
-        synchronized (players) {
-            // Same as waitingPlayers
-            players.put(session.getId(), new Player(session));
-        }
+        // Sequential access/write for waitingPlayers
+        waitingPlayers.add(session);
+        players.put(session.getId(), new Player(session));
 
         synchronized (this) {
             // Ensure that create game is thread-safe
@@ -108,12 +102,8 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
             if (session1 != null && session2 != null) {
 
-                Player player1;
-                Player player2;
-                synchronized (players) {
-                    player1 = players.get(session1.getId());
-                    player2 = players.get(session2.getId());
-                }
+                Player player1 = players.get(session1.getId());
+                Player player2 = players.get(session2.getId());
 
                 // Initialize player positions and IDs
                 player1.playerId = 1;
@@ -124,11 +114,8 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
                 player2.y = 300; // Middle height
 
                 Game game = new Game(player1, player2);
-                synchronized (games) {
-                    games.put(session1.getId(), game);
-                    games.put(session2.getId(), game);
-                }
-
+                games.put(session1.getId(), game);
+                games.put(session2.getId(), game);
                 startGame(game);
             }
         }
@@ -202,18 +189,12 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     protected void handleTextMessage(WebSocketSession session, TextMessage message) {
         try {
 
-            Game game;
-            synchronized (games) {
-                game = games.get(session.getId());
-            }
+            Game game = games.get(session.getId());
+
             if (game == null)
                 return;
 
-            Player currentPlayer;
-
-            synchronized (players) {
-                currentPlayer = players.get(session.getId());
-            }
+            Player currentPlayer = players.get(session.getId());
             Player otherPlayer = game.player1 == currentPlayer ? game.player2 : game.player1;
 
             String payload = message.getPayload();
@@ -268,14 +249,12 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         // Send final scores to both players
         List<Integer> finalScores = Arrays.asList(game.player1.score, game.player2.score);
 
-        synchronized (this.players) {
-            if (this.players.containsKey(game.player1.session.getId())) {
-                sendToPlayer(game.player1, "o", finalScores);
-            }
+        if (this.players.containsKey(game.player1.session.getId())) {
+            sendToPlayer(game.player1, "o", finalScores);
+        }
 
-            if (this.players.containsKey(game.player2.session.getId())) {
-                sendToPlayer(game.player2, "o", finalScores);
-            }
+        if (this.players.containsKey(game.player2.session.getId())) {
+            sendToPlayer(game.player2, "o", finalScores);
         }
 
         // Cancel timer and cleanup game resources
@@ -283,10 +262,8 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
             game.timerTask.cancel(false);
         }
 
-        synchronized (games) {
-            games.remove(game.player1.session.getId());
-            games.remove(game.player2.session.getId());
-        }
+        games.remove(game.player1.session.getId());
+        games.remove(game.player2.session.getId());
     }
 
     /**
@@ -295,20 +272,14 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
      */
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
-        synchronized (players) {
-            players.remove(session.getId());
+        players.remove(session.getId());
+        waitingPlayers.remove(session);
+
+        Game game = games.remove(session.getId());
+        if (game != null) {
+            endGame(game);
         }
 
-        synchronized (waitingPlayers) {
-            waitingPlayers.remove(session);
-        }
-
-        synchronized (games) {
-            Game game = games.remove(session.getId());
-            if (game != null) {
-                endGame(game);
-            }
-        }
     }
 
     /**

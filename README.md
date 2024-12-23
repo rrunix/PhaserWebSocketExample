@@ -2,6 +2,20 @@
 
 This is a real-time multiplayer game where players compete to collect squares within a time limit. The game is built using a WebSocket backend and a Phaser frontend.
 
+## Important Notes
+
+This code serves as starter code and is not intended to represent a fully functional or polished game. It includes basic features but lacks refined design and functionality. Below are some specific considerations:
+
+- **Visual Design**: The game uses basic geometric shapes and lacks indicators (e.g., to show which player you control).
+- **Scene Limitations**: The `MainScene` is not intended to function as a standalone scene. It assumes certain external setups that are not present in this example.
+- **Known Issues**:
+  - **Player Identification**: There is no visual indication of which circle belongs to the player.
+  - **Asset Quality**: Basic assets are used (e.g., rectangles for squares and circles for players).
+  - **Connection Edge Cases**: If a player refreshes their browser during matchmaking, it can result in unexpected behavior:
+    - For example, if the server pairs two connections from the same player (one from the refreshed browser and the other from the old connection), the game may result in a "draw" because the game ends before scoring can occur. This occurrs because the old connection closes before the actual game has started.
+
+This project is a starting point for developing a multiplayer game. To create a complete and enjoyable experience, further enhancements are recommended, including improved visuals, better handling of game states, and additional features to enrich gameplay.
+
 ## Features
 
 - **Real-Time Multiplayer**: Players are matched in pairs and play in real-time.
