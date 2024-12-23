@@ -50,6 +50,9 @@ class MainScene extends Phaser.Scene {
         /** @type {Phaser.GameObjects.Text} Player display */
         this.playerText = null;
 
+        /** @type {Phaser.GameObjects.Text} Waiting display */
+        this.waitingDisplay = null;
+
         /** @type {boolean} Indicates whether the game has started */
         this.gameStarted = false;
 
@@ -88,6 +91,7 @@ class MainScene extends Phaser.Scene {
         this.scoreText = this.add.text(16, 16, 'Score: 0 - 0', { fontSize: '32px', fill: '#fff' });
         this.timeText = this.add.text(16, 50, 'Time: 60', { fontSize: '32px', fill: '#fff' });
         this.playerText = this.add.text(16, 84, 'Player: ', { fontSize: '32px', fill: '#fff' });
+        this.waitingDisplay = this.add.text(150, 300, 'Waiting for another player ', { fontSize: '32px', fill: '#fff' });
 
         // Setup WebSocket event handlers
         this.setupWebSocket();
@@ -223,6 +227,10 @@ class MainScene extends Phaser.Scene {
      * @param {object} data Initialization data from the server
      */
     handleInit(data) {
+        if (this.waitingDisplay) {
+            this.waitingDisplay.destroy();
+        }
+
         this.playerId = data.id;
         this.initializePlayers(data.p);
         this.gameStarted = true;
